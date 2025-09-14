@@ -1,0 +1,2 @@
+# powermon USB (using esp32s3)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", ATTRS{product}=="powermon_esp32", SYMLINK+="powermon", MODE="0666"

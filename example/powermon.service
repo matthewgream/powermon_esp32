@@ -1,0 +1,16 @@
+[Unit]
+Description=powermon usb
+After=dev-powermon.device
+BindsTo=dev-powermon.device
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/powermon --config /etc/default/powermon /dev/powermon
+TimeoutStopSec=15s
+KillMode=mixed
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=dev-powermon.device
