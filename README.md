@@ -44,6 +44,14 @@ The ESP32-S3 supports ADC1 with 10 channels and ADC2 with 10 channels. This impl
 This is the example raw output with device 3 connected, a 500W heat gun, registring at ~240V and at full power (~2.1A); then reduced to half power (~1.2A) or off (~0.0A). This devices shows OK for both voltage and current readings. Sensors are not connected for devices 1, 2, 4 and 5, showing a zero offset error.
 
 ```
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x0 (DOWNLOAD(USB/UART0))
+Saved PC:0x40041a76
+--- 0x40041a76: ets_delay_us in ROM
+waiting for download
+--- Error: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+--- Waiting for the device to reconnect..
 0000000000000000 INIT 0000000000000000 type=power-ac,vers=1.00,arch=esp32s3,serial=D0:CF:13:0B:96:5C,hw-voltage=zmpt101b,hw-current=acs712-30,voltage-freq=60,voltage-max=500,current-max=50,devices=5,period-read=5000,period-diag=60000,debug-pin=no,adc-bits=12,adc-rate=40kHz,adc-size-frame=1000,adc-size-pool=16000,adc-pins=1/3/5/7/9/2/4/6/8/10
 0000000004987149 READ 0000000000000001 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 242.265549,2.156977,-096,OK,OK 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS
 0000000009977149 READ 0000000000000002 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 242.365646,1.197311,-118,OK,OK 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS
