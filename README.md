@@ -41,7 +41,7 @@ The ESP32-S3 supports ADC1 with 10 channels and ADC2 with 10 channels. This impl
 
 **EXAMPLE**
 
-This is the example raw output with device 3 connected, a 500W heat gun, registring at ~240V and at full power (~2.1A); then reduced to half power (~1.2A) or off (~0.0A). This devices shows OK for both voltage and current readings. Sensors are not connected for devices 1, 2, 4 and 5, showing a zero offset error.
+This is the example raw output with device 3 connected, a 500W heat gun, registering at ~240V and at full power (~2.1A); then reduced to half power (~1.2A) or off (~0.0A). This device readings show OK for both voltage and current readings. Sensors are not connected for devices 1, 2, 4 and 5, showing a zero offset error, as expected.
 
 ```
 ESP-ROM:esp32s3-20210327
@@ -70,7 +70,7 @@ waiting for download
 0000000069857149 READ 0000000000000014 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 242.427139,0.119139,+017,OK,OK 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS 999.999999,99.999999,+999,E_ZOFFS,E_ZOFFS
 ```
 
-This is the example processed output (from the example/powermon.c application):
+This is the example processed output (from the example/powermon.c application), showing only device 3 (index 2) active.
 
 ```
 root@workshop:/opt/powermon_esp32/example# make test
