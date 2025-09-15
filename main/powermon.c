@@ -105,8 +105,8 @@ void __app_init(void) {
 
 // Pin Mapping - GPIO pins for ADC channels (GPIO1 to 10 only allowed on ADC unit 1)
 static const gpio_num_t adc_sensor_pins[NUM_SENSORS] = {
-    GPIO_NUM_1, GPIO_NUM_3, GPIO_NUM_5, GPIO_NUM_7, GPIO_NUM_9, // Current sensors (ACS712)
-    GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_6, GPIO_NUM_8, GPIO_NUM_10 // Voltage sensors (ZMPT101B)
+    GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_6, GPIO_NUM_8, GPIO_NUM_10, // Current sensors (ACS712)
+    GPIO_NUM_1, GPIO_NUM_3, GPIO_NUM_5, GPIO_NUM_7, GPIO_NUM_9 // Voltage sensors (ZMPT101B)
 };
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -432,7 +432,7 @@ static esp_err_t readings_process(adc_system_t *adc, adc_result_t *readings) {
 
 #define OUTPUT_PRINT                           printf
 #define OUTPUT_FLUSH()                         fflush(stdout)
-#define OUTPUT_BEGIN(type, timestamp, counter) OUTPUT_PRINT("%016llu " type " %016llu", timestamp, counter)
+#define OUTPUT_BEGIN(type, timestamp, counter) OUTPUT_PRINT("%016" PRIx64 " " type " %016" PRIx64, timestamp, counter)
 #define OUTPUT_END()                           OUTPUT_PRINT("\n"), OUTPUT_FLUSH()
 
 static void output_display_init(const int64_t timestamp, const uint64_t counter) {

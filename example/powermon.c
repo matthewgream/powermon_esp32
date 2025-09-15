@@ -143,7 +143,7 @@ static bool serial_readline(const int fd, char *line, const size_t line_size) {
 
 static void process_line_read(const uint64_t timestamp, const uint64_t sequence, const char *data) {
 
-    printf("%" PRIu64 " %" PRIu64 " READ ", timestamp, sequence);
+    printf("%" PRIx64 " %" PRIx64 " READ ", timestamp, sequence);
 
     const char *ptr = data;
     int device      = 0;
@@ -158,7 +158,7 @@ static void process_line_read(const uint64_t timestamp, const uint64_t sequence,
 
         if (device > 0)
             printf(" ");
-        printf("[%d] ", device);
+        printf("[%d] ", device + 1);
         printf(voltage > 900.0 ? "-," : "%.6fV,", voltage);
         printf(current > 90.0 ? "-," : "%.6fA,", current);
         printf(voltage > 900.0 || current > 90.0 ? "-" : "%+04.0f°", phase);
@@ -175,7 +175,7 @@ static void process_line_read(const uint64_t timestamp, const uint64_t sequence,
 
 static void process_line_diag(const uint64_t timestamp, const uint64_t sequence, const char *data) {
 
-    printf("%" PRIu64 " %" PRIu64 " DIAG ", timestamp, sequence);
+    printf("%" PRIx64 " %" PRIx64 " DIAG ", timestamp, sequence);
 
     const char *ptr = data;
     int device      = 0;
@@ -191,7 +191,7 @@ static void process_line_diag(const uint64_t timestamp, const uint64_t sequence,
 
         if (device > 0)
             printf(" ");
-        printf("[%d] ", device);
+        printf("[%d] ", device + 1);
         printf("%.1f,%lu,%s;", voltage_offset, voltage_samples, voltage_faults);
         printf("%.1f,%lu,%s", current_offset, current_samples, current_faults);
 
@@ -206,7 +206,7 @@ static void process_line_diag(const uint64_t timestamp, const uint64_t sequence,
 
 static void process_line_rest(const uint64_t timestamp, const uint64_t sequence, const char *type, const char *data) {
 
-    printf("%" PRIu64 " %" PRIu64 " %s", timestamp, sequence, type);
+    printf("%" PRIx64 " %" PRIx64 " %s", timestamp, sequence, type);
 
     if (data && *data)
         printf(" %s", data);
@@ -234,7 +234,7 @@ static void process_line(const char *line) {
 
     received++;
 
-    if (sscanf(line, "%" SCNu64 " %15s %" SCNu64, &timestamp, type, &sequence) != 3) {
+    if (sscanf(line, "%" SCNx64 " %15s %" SCNx64, &timestamp, type, &sequence) != 3) {
         if (received > 1)
             fprintf(stderr, "error: failed to parse line '%s'\n", line);
         return;

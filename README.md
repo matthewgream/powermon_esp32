@@ -10,7 +10,7 @@ Prototyped using generic ESP32-S3 supermini board with generic ACS712 and ZMPT10
 ESP32-S3 is powered from USB and sensors are 5V powered from ESP32-S3 5V pin: no additional power circuitry.
 No other components needed other than micro, sensors and voltage divider resistors (and wiring terminals).
 
-Outputs single lines of text with the format ``timestamp type counter content``, where ``timestamp`` is nanoseconds since startup, ``type`` is a string (``INIT``, ``TERM``, ``READ``, ``DIAG``, ``FAIL``), ``counter`` is the ``READ`` counter (even if not the ``READ`` line), and ``content`` depends on the type.
+Outputs single lines of text with the format ``timestamp type counter content``, where ``timestamp`` is nanoseconds since startup (16 characters, base-16), ``type`` is a string (``INIT``, ``TERM``, ``READ``, ``DIAG``, ``FAIL``), ``counter`` is the ``READ`` counter (16 characters, base-16) (even if not the ``READ`` line), and ``content`` depends on the type.
 * ``INIT`` provides hardware and software details and parameters and is issued once when the powermon starts/restarts.
 * ``TERM`` is issued when the powermon stops gracefully (which it will not do for now, as it only stops on errors).
 * ``READ`` provides each of the 5 devices voltage, current, phase-angle and fault status and is issued every 5 seconds.
@@ -33,6 +33,12 @@ Please note the LICENSE (Attribution-NonCommercial-ShareAlike).
 
 The ESP32-S3 supports ADC1 with 10 channels and ADC2 with 10 channels. This implementation uses ADC1 only. ADC2 is unavailable if WiFi is enabled. With some additional work, this implementation could support 10 devices (20 channels). 
 
+Should be reasonably adjustable to work with other ESP32 series (just take note of the ADC configurations and limitations: the S3 was chosen for number of ADC channels supported on unit 1 DMA), and other voltage and current sensors (after all, they are just read through voltage dividers on ADC pins).
+
+Generally designed and used for mains level, being ~240VAC and not more than 16A. Please use wire sizes (e.g. 1.5mm sq) and terminals accordingly. I'm a qualified professional electronics engineer, so I understand how to work with mains level voltages: please don't work with these voltages unless you are also confident in doing so safely: loss of life is a real risk.
+
+The sensors are not necessarily calibrated, and the resistors (i.e. voltage dividers) come with tolerances (e.g. 1% metal-film), and the ADC may also be uncalibrated. Therefore, the readings should not be considered to be precise, and are not intended to be in this desigh. 
+
 **RESOURCES**
 
 * ESP32-S3 microcontroller [datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf) and [Zero Board](https://www.waveshare.com/esp32-s3-zero.htm) (waveshare).
@@ -41,7 +47,7 @@ The ESP32-S3 supports ADC1 with 10 channels and ADC2 with 10 channels. This impl
 
 **EXAMPLE**
 
-This is the example raw output with device 4 connected, a 500W heat gun, registering at ~240V and at full power (~2.1A); then reduced to half power (~1.2A) or off (~0.0A). This device readings show OK for both voltage and current readings. No other devices are connected, so regular zero (noise) loads.
+This is the example raw output with device 4 connected, a 500W heat gun, registering at ~240V and at full power (~2.1A); then reduced to half power (~1.2A) or off (~0.0A). This device readings show OK for both voltage and current readings. No other devices are connected, so show  zero (noise) level loads.
 
 ```
 --- Waiting for the device to reconnect.......
@@ -75,6 +81,27 @@ This is the example raw output with device 4 connected, a 500W heat gun, registe
 This is the example processed output (from the example/powermon.c application), showing only device 4 (index 3) active.
 
 ```
+root@workshop:/opt/powermon_esp32# lsusb -v -d 303a:1001 | head -20
+
+Bus 001 Device 048: ID 303a:1001 Espressif powermon_esp32
+Negotiated speed: Full Speed (12Mbps)
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass          239 Miscellaneous Device
+  bDeviceSubClass         2 [unknown]
+  bDeviceProtocol         1 Interface Association
+  bMaxPacketSize0        64
+  idVendor           0x303a Espressif
+  idProduct          0x1001 powermon_esp32
+  bcdDevice            1.01
+  iManufacturer           1 Espressif
+  iProduct                2 powermon_esp32
+  iSerial                 3 D0:CF:13:0B:96:5C
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
 root@workshop:/opt/powermon_esp32/example# make test
 ./powermon --config powermon.default /dev/powermon
 started on '/dev/powermon' (verbose=true)
@@ -92,13 +119,13 @@ b012fcc 25 READ [0] 1.902826V,0.051264A,+006° (OK,OK) [1] 1.925586V,0.041024A,+
 
 **IMAGES**
 
-Breadboard, dupont connections, single device (two sensors).
+Breadboard, dupont connectors, microcontroller and single device (two sensors), as used in development. Take caution to isolate your USB due to risk of a fault damanging your development machine.
 
-![Breadboard](docs/1_breadboard.jpg)
+![Breadboard](docs/build_1_breadboard.jpg)
 
-Stripboard, soldered connections, five devices (ten sensors). Note I had a lot of spare 10K resistors. Stripboard output as well..
+Stripboard, soldered connections, five devices (ten sensors). Note I had a lot of spare 10K resistors I chose to use for expediency. Used custom JST XH2.54 connectors and leads to deliver power and ground to both devices, and provide a signal return from each device. Advise to test all ground and power rails to ensure unshorted and test voltage divider resistances for correctness and tolerance. 
 
-![Stripboard](docs/2_stripboard.jpg)
+![Stripboard](docs/build_2_stripboard.jpg)
 
-![Stripoutput](docs/3_stripoutput.jpg)
+![Stripoutput](docs/build_3_stripoutput.jpg)
 
