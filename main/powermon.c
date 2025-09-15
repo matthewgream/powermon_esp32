@@ -106,7 +106,7 @@ void __app_init(void) {
 // Pin Mapping - GPIO pins for ADC channels (GPIO1 to 10 only allowed on ADC unit 1)
 static const gpio_num_t adc_sensor_pins[NUM_SENSORS] = {
     GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_6, GPIO_NUM_8, GPIO_NUM_10, // Current sensors (ACS712)
-    GPIO_NUM_1, GPIO_NUM_3, GPIO_NUM_5, GPIO_NUM_7, GPIO_NUM_9 // Voltage sensors (ZMPT101B)
+    GPIO_NUM_1, GPIO_NUM_3, GPIO_NUM_5, GPIO_NUM_7, GPIO_NUM_9   // Voltage sensors (ZMPT101B)
 };
 
 // ------------------------------------------------------------------------------------------------------------------------

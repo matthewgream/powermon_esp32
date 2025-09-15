@@ -19,6 +19,7 @@
 // ------------------------------------------------------------------------------------------------------------------------
 
 static bool g_verbose = false;
+static bool g_reconnect = false;
 
 static bool parse_config(const char *file) {
 
@@ -47,6 +48,8 @@ static bool parse_config(const char *file) {
 
         if (strcmp(key, "verbose") == 0)
             g_verbose = (strcmp(value, "true") == 0);
+        if (strcmp(key, "reconnect") == 0)
+            g_reconnect = (strcmp(value, "true") == 0);
     }
 
     fclose(fp);
