@@ -13,12 +13,13 @@
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-#define SERIAL_BUFFER_SIZE 2048
-#define LINE_BUFFER_SIZE   512
+#define SERIAL_BUFFER_SIZE   2048
+#define LINE_BUFFER_SIZE     512
+#define RECONNECT_DELAY_SECS 5
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-static bool g_verbose = false;
+static bool g_verbose   = false;
 static bool g_reconnect = false;
 
 static bool parse_config(const char *file) {
@@ -97,6 +98,12 @@ static int serial_open(const char *device) {
 error:
     close(fd);
     return -1;
+}
+
+static void serial_close(const int fd) {
+
+    if (fd >= 0)
+        close(fd);
 }
 
 static bool serial_readline(const int fd, char *line, const size_t line_size) {
@@ -277,31 +284,45 @@ int main(const int argc, const char *argv[]) {
     if (!parse_config(config_file))
         return EXIT_FAILURE;
 
+    fprintf(stderr, "started on '%s' (verbose=%s)\n", device, g_verbose ? "true" : "false");
+
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    const int fd = serial_open(device);
-    if (fd < 0) {
-        fprintf(stderr, "error: cannot open device '%s' (%s)\n", device, strerror(errno));
-        return EXIT_FAILURE;
-    }
+    do {
 
-    fprintf(stderr, "started on '%s' (verbose=%s)\n", device, g_verbose ? "true" : "false");
+        const int fd = serial_open(device);
+        if (fd < 0) {
 
-    while (g_running) {
+            fprintf(stderr, "device '%s' cannot be opened (%s)\n", device, strerror(errno));
 
-        char line[LINE_BUFFER_SIZE];
-        if (serial_readline(fd, line, sizeof(line)))
-            process_line(line);
-        else if (!serial_check(device)) {
-            fprintf(stderr, "error: device '%s' disconnected\n", device);
-            break;
+            if (!g_reconnect)
+                return EXIT_FAILURE;
+
+            sleep(RECONNECT_DELAY_SECS);
+
+        } else {
+
+            fprintf(stderr, "device '%s' opened\n", device);
+
+            while (g_running) {
+
+                char line[LINE_BUFFER_SIZE];
+                if (serial_readline(fd, line, sizeof(line)))
+                    process_line(line);
+                else if (!serial_check(device)) {
+                    fprintf(stderr, "device '%s' disconnected\n", device);
+                    break;
+                }
+            }
+
+            serial_close(fd);
+
+            if (!g_running)
+                fprintf(stderr, "device '%s' closed\n", device);
         }
-    }
 
-    close(fd);
-
-    fprintf(stderr, "stopped\n");
+    } while (g_running && g_reconnect);
 
     return EXIT_SUCCESS;
 }
