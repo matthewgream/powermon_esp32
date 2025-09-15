@@ -72,7 +72,7 @@ This is the example raw output with device 4 connected, a 500W heat gun, registe
 0000000006d7352c READ 0000000000000017 2.507425,0.055922,+017,OK,OK 1.641916,0.044113,+000,OK,OK 1.673354,0.041619,+011,OK,OK 244.598907,0.044524,+000,OK,OK 1.849481,0.047480,+006,OK,OK
 ```
 
-This is the example processed output (from the example/powermon.c application), showing only device 3 (index 2) active.
+This is the example processed output (from the example/powermon.c application), showing only device 4 (index 3) active.
 
 ```
 root@workshop:/opt/powermon_esp32/example# make test
