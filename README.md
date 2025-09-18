@@ -129,3 +129,4 @@ Stripboard, soldered connections, five devices (ten sensors). Note I had a lot o
 
 ![Stripoutput](docs/build_3_stripoutput.jpg)
 
+![Encased](docs/build_4_encased.jpg)
