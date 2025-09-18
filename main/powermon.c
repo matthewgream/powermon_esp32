@@ -103,11 +103,21 @@ void __app_init(void) {
 #define ZERO_OFFSET_LOWER                 1000
 #define ZERO_OFFSET_UPPER                 2800
 
+// ------------------------------------------------------------------------------------------------------------------------
+
 // Pin Mapping - GPIO pins for ADC channels (GPIO1 to 10 only allowed on ADC unit 1)
 static const gpio_num_t adc_sensor_pins[NUM_SENSORS] = {
     GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_6, GPIO_NUM_8, GPIO_NUM_10, // Current sensors (ACS712)
     GPIO_NUM_1, GPIO_NUM_3, GPIO_NUM_5, GPIO_NUM_7, GPIO_NUM_9   // Voltage sensors (ZMPT101B)
 };
+
+// Calibration parameters
+typedef struct {
+    float gain;   // Multiplicative correction (default 1.0)
+    float offset; // Additive correction in final units (default 0.0)
+} calibration_t;
+static calibration_t voltage_calibration[NUM_DEVICES] = { { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 } };
+static calibration_t current_calibration[NUM_DEVICES] = { { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 0.0 } };
 
 // ------------------------------------------------------------------------------------------------------------------------
 
@@ -283,28 +293,30 @@ static float calculate_rms(const uint32_t *samples, const uint32_t count, const 
     return sqrtf(sum_squares / (float)count);
 }
 
-static float convert_adc_to_current(const float rms_adc) {
-
+static float convert_adc_to_current(const float rms_adc, const calibration_t *cal) {
     // Convert ADC RMS to voltage at ADC pin
     const float v_adc_rms = (rms_adc / (float)ADC_MAX_VALUE) * (float)ADC_VREF;
     // Account for voltage divider to get actual sensor output voltage
     const float v_sensor_rms = v_adc_rms * (float)VDIV_RATIO;
-    // Convert voltage to current using ACS712 sensitivity: outputs 2.5V at 0A, deviation from 2.5V indicates current
-    const float current = (v_sensor_rms * (float)1000.0) / (float)ACS712_MV_PER_AMP;
+    // Convert voltage to current using ACS712 sensitivity
+    const float current_raw = (v_sensor_rms * (float)1000.0) / (float)ACS712_MV_PER_AMP;
+    // Apply calibration: corrected = (raw * gain) + offset
+    const float current_calibrated = (current_raw * cal->gain) + cal->offset;
 
-    return current;
+    return current_calibrated;
 }
 
-static float convert_adc_to_voltage(const float rms_adc) {
-
+static float convert_adc_to_voltage(const float rms_adc, const calibration_t *cal) {
     // Convert ADC RMS to voltage at ADC pin
     const float v_adc_rms = (rms_adc / (float)ADC_MAX_VALUE) * (float)ADC_VREF;
     // Account for voltage divider to get actual sensor output voltage
     const float v_sensor_rms = v_adc_rms * (float)VDIV_RATIO;
     // Convert sensor voltage to actual AC voltage using ZMPT101B ratio
-    const float voltage = v_sensor_rms / (float)ZMPT101B_RATIO;
+    const float voltage_raw = v_sensor_rms / (float)ZMPT101B_RATIO;
+    // Apply calibration: corrected = (raw * gain) + offset
+    const float voltage_calibrated = (voltage_raw * cal->gain) + cal->offset;
 
-    return voltage;
+    return voltage_calibrated;
 }
 
 static float calculate_zero_offset(const uint32_t *samples, const uint32_t count) {
@@ -351,7 +363,7 @@ static void readings_calculate(adc_system_t *adc, adc_result_t *readings) {
             adc->fault_count[c][FAULT_SAMPLES_CNT]++;
         } else {
             const float zero_offset = calculate_zero_offset(adc->samples[c], adc->sample_count[c]);
-            const float current_rms = convert_adc_to_current(calculate_rms(adc->samples[c], adc->sample_count[c], zero_offset));
+            const float current_rms = convert_adc_to_current(calculate_rms(adc->samples[c], adc->sample_count[c], zero_offset), &current_calibration[d]);
             adc->zero_offset[c]     = zero_offset;
             readings[d].current_rms = current_rms;
 
@@ -378,7 +390,7 @@ static void readings_calculate(adc_system_t *adc, adc_result_t *readings) {
             adc->fault_count[v][FAULT_SAMPLES_CNT]++;
         } else {
             const float zero_offset = calculate_zero_offset(adc->samples[v], adc->sample_count[v]);
-            const float voltage_rms = convert_adc_to_voltage(calculate_rms(adc->samples[v], adc->sample_count[v], zero_offset));
+            const float voltage_rms = convert_adc_to_voltage(calculate_rms(adc->samples[v], adc->sample_count[v], zero_offset), &voltage_calibration[d]);
             adc->zero_offset[v]     = zero_offset;
             readings[d].voltage_rms = voltage_rms;
 
@@ -445,6 +457,10 @@ static void output_display_init(const int64_t timestamp, const uint64_t counter)
     for (int i = 0, o = 0; i < NUM_SENSORS; i++)
         o += snprintf(&pins_str[o], sizeof(pins_str) - (size_t)o, "%s%d", i == 0 ? "" : "/", adc_sensor_pins[i]);
     OUTPUT_PRINT(",adc-bits=%d,adc-rate=%dkHz,adc-size-frame=%d,adc-size-pool=%d,adc-pins=%s", ADC_BIT_SIZE, ADC_SAMPLE_RATE_HZ / 1000, ADC_FRAME_SIZE, ADC_POOL_SIZE, pins_str);
+    OUTPUT_PRINT(",calibrations=");
+    for (int d = 0; d < NUM_DEVICES; d++)
+        OUTPUT_PRINT("%s%.3f+%.1fV/%.3f+%.1fC", d == 0 ? "" : ";", voltage_calibration[d].gain, voltage_calibration[d].offset, current_calibration[d].gain,
+                     current_calibration[d].offset);
     OUTPUT_END();
 }
 
